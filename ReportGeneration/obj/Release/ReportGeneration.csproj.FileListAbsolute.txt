@@ -1,0 +1,9 @@
+C:\SampleProgram\ReportGeneration\ReportGeneration\bin\Release\ReportGeneration.exe.config
+C:\SampleProgram\ReportGeneration\ReportGeneration\bin\Release\ReportGeneration.exe
+C:\SampleProgram\ReportGeneration\ReportGeneration\bin\Release\ReportGeneration.pdb
+C:\SampleProgram\ReportGeneration\ReportGeneration\bin\Release\StructureMap.dll
+C:\SampleProgram\ReportGeneration\ReportGeneration\bin\Release\StructureMap.xml
+C:\SampleProgram\ReportGeneration\ReportGeneration\obj\Release\ReportGeneration.csproj.CoreCompileInputs.cache
+C:\SampleProgram\ReportGeneration\ReportGeneration\obj\Release\ReportGeneration.csproj.CopyComplete
+C:\SampleProgram\ReportGeneration\ReportGeneration\obj\Release\ReportGeneration.exe
+C:\SampleProgram\ReportGeneration\ReportGeneration\obj\Release\ReportGeneration.pdb
