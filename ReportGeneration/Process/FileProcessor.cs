@@ -58,6 +58,7 @@ namespace ReportGeneration.Process
                         {
                             isFileProcessed = XmlParser.SerializeObjectToXml(result);
                         }
+                        //If file processed successfully and report generated, moving the incoming file to the archive folder.
                         if (isFileProcessed)
                             ArchiveIncomingFile(fullPath);
                     }
@@ -91,20 +92,27 @@ namespace ReportGeneration.Process
             {
                 foreach (var item in generationReport.Wind?.WindGenerators)
                 {
+                    //Daily wind generation calculation adding it to generator collection
                     generators.Add(await CalculateGenerationTotal(item.Generations, item.Name, item.Location));
                 };
                 foreach (var item in generationReport.Coal?.CoalGenerators)
                 {
+                    //Daily coal generation calculation and adding it to generator collection
                     generators.Add(await CalculateGenerationTotal(item.Generations, item.Name, null));
+                    //Coal max emission calculation and adding it to days collection. 
                     days.AddRange(await CalculateCoalMaxEmission(item));
+                    //Coal actual heat rate calculation.
                     actualHeatRates.Add(await CalculateActualHeatRate(item));
                 };
                 foreach (var item in generationReport.Gas.GasGenerators)
                 {
+                    //Daily gas generation calculation and adding it to generator collection
                     generators.Add(await CalculateGenerationTotal(item.Generations, item.Name, null));
+                    //Gas max emission calculation and adding it to days collection. 
                     days.AddRange(await CalculateGasMaxEmission(item));
                 };
 
+                //Adding items to the GenerationOut object
                 generationOutput.Totals = new Totals
                 {
                     Generators = new List<Generator>()

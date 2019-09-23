@@ -3,7 +3,7 @@
 namespace ReportGeneration.Helpers
 {
     /// <summary>
-    /// Extensions
+    /// Class for extension methods
     /// </summary>
     public static class Extensions
     {

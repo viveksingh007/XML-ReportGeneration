@@ -1,0 +1,6 @@
+To run the solution, we need to create a few folders in c: drive or you can change it according to your wish.
+If you want to change the folder name and location for the incoming and output file,
+please update the same into App.config else please created the below the folder structure in c: drive.
+IncomingFilePath = C:\Personal\ReportGeneration\Incoming
+OutputFilePath = C:\Personal\ReportGeneration\Output\GenerationOutput.xml
+ArchiveIncomingFolderPath = C:\Personal\ReportGeneration\Incoming\Archive
