@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DependencyResolution\DefaultRegistry .cs" />
+    <Compile Include="Helpers\Extensions.cs" />
     <Compile Include="Logger\ConsoleLogger.cs" />
     <Compile Include="Logger\Interface\ILog.cs" />
     <Compile Include="Process\Interface\IFileProcessor.cs" />

@@ -91,17 +91,17 @@ namespace ReportGeneration.Process
             {
                 foreach (var item in generationReport.Wind?.WindGenerators)
                 {
-                    generators.Add(await CalculateWindGeneratorTotal(item));
+                    generators.Add(await CalculateGenerationTotal(item.Generations, item.Name, item.Location));
                 };
                 foreach (var item in generationReport.Coal?.CoalGenerators)
                 {
-                    generators.Add(await CalculateCoalGeneratorTotal(item));
+                    generators.Add(await CalculateGenerationTotal(item.Generations, item.Name, null));
                     days.AddRange(await CalculateCoalMaxEmission(item));
                     actualHeatRates.Add(await CalculateActualHeatRate(item));
                 };
                 foreach (var item in generationReport.Gas.GasGenerators)
                 {
-                    generators.Add(await CalculateGasGeneratorTotal(item));
+                    generators.Add(await CalculateGenerationTotal(item.Generations, item.Name, null));
                     days.AddRange(await CalculateGasMaxEmission(item));
                 };
 
@@ -170,7 +170,7 @@ namespace ReportGeneration.Process
                 _iLog.Info("Calculate gas max emission process started.");
                 foreach (var day in gasGenerator.Generations?.Days)
                 {
-                    days.Add(await CalculateGasDailyMaxEmission(day, gasGenerator.Name, gasGenerator.EmissionsRating));
+                    days.Add(await CalculateDailyMaxEmission(day, gasGenerator.Name, gasGenerator.EmissionsRating, "Medium"));
                 }
             }
             catch (Exception ex)
@@ -179,68 +179,7 @@ namespace ReportGeneration.Process
             }
             return days;
         }
-
-        /// <summary>
-        /// Calculates the gas generator total.
-        /// </summary>
-        /// <param name="gasGenerator">The gas generator.</param>
-        /// <returns></returns>
-        private async Task<Generator> CalculateGasGeneratorTotal(Input.GasGenerator gasGenerator)
-        {
-            if (gasGenerator == null) return null;
-            try
-            {
-                _iLog.Info("Calculate gas generator total process started.");
-                double gasTotal = 0;
-                double _valueFactorMedium = AppConfigHelper.GetSectionsConfig("ValueFactor", "Medium", 0.0);
-                if (!(gasGenerator.Generations?.Days == null) && gasGenerator.Generations?.Days?.Count > 0)
-                {
-                    foreach (var item in gasGenerator.Generations?.Days)
-                    {
-                        gasTotal += (item.Energy * item.Price * _valueFactorMedium);
-                    }
-                }
-
-                return new Generator
-                {
-                    Name = gasGenerator.Name,
-                    Total = gasTotal
-                };
-            }
-            catch (Exception ex)
-            {
-                _iLog.Error($"Error while calculating gas generator total. Error: {ex.Message}");
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Calculates the gas daily maximum emission.
-        /// </summary>
-        /// <param name="day">The day.</param>
-        /// <param name="name">The name.</param>
-        /// <param name="emissionsRating">The emissions rating.</param>
-        /// <returns></returns>
-        private async Task<Day> CalculateGasDailyMaxEmission(Input.Day day, string name, double emissionsRating)
-        {
-            if (day == null) return null;
-            try
-            {
-                _iLog.Info("Calculate gas daily max emission process started.");
-                return new Day
-                {
-                    Name = name,
-                    Date = day.Date,
-                    Emission = (day.Energy * emissionsRating * AppConfigHelper.GetSectionsConfig("EmissionFactor", "Medium", 0.0))
-                };
-            }
-            catch (Exception ex)
-            {
-                _iLog.Error($"Error while calculating gas daily max emission. Error: {ex.Message}");
-            }
-            return null;
-        }
-
+       
         #endregion Gas
 
         #region Coal
@@ -254,13 +193,12 @@ namespace ReportGeneration.Process
         {
             if (coalGenerator == null) return null;
             List<Day> days = new List<Day>();
-
             try
             {
                 _iLog.Info("Calculate coal max emission process started.");
                 foreach (var day in coalGenerator.Generations?.Days)
                 {
-                    days.Add(await CalculateCoalDailyMaxEmission(day, coalGenerator.Name, coalGenerator.EmissionsRating));
+                    days.Add(await CalculateDailyMaxEmission(day, coalGenerator.Name, coalGenerator.EmissionsRating, "High"));
                 }
             }
             catch (Exception ex)
@@ -268,67 +206,6 @@ namespace ReportGeneration.Process
                 _iLog.Error($"Error while calculating coal max emission. Error: {ex.Message}");
             }
             return days;
-        }
-
-        /// <summary>
-        /// Calculates the coal daily maximum emission.
-        /// </summary>
-        /// <param name="day">The day.</param>
-        /// <param name="name">The name.</param>
-        /// <param name="emissionsRating">The emissions rating.</param>
-        /// <returns></returns>
-        private async Task<Day> CalculateCoalDailyMaxEmission(Input.Day day, string name, double emissionsRating)
-        {
-            if (day == null) return null;
-            try
-            {
-                _iLog.Info("Calculate coal daily max emission process started.");
-                return new Day
-                {
-                    Name = name,
-                    Date = day.Date,
-                    Emission = (day.Energy * emissionsRating * AppConfigHelper.GetSectionsConfig("EmissionFactor", "High", 0.0))
-                };
-            }
-            catch (Exception ex)
-            {
-                _iLog.Error($"Error while calculating coal daily max emission. Error: {ex.Message}");
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Calculates the coal generator total.
-        /// </summary>
-        /// <param name="coalGenerator">The coal generator.</param>
-        /// <returns></returns>
-        private async Task<Generator> CalculateCoalGeneratorTotal(Input.CoalGenerator coalGenerator)
-        {
-            if (coalGenerator == null) return null;
-            try
-            {
-                _iLog.Info($"Calculate coal generator process started.");
-                double coalTotal = 0;
-                double _valueFactorMedium = AppConfigHelper.GetSectionsConfig("ValueFactor", "Medium", 0.0);
-                if (!(coalGenerator.Generations?.Days == null) && coalGenerator.Generations?.Days?.Count > 0)
-                {
-                    foreach (var item in coalGenerator.Generations?.Days)
-                    {
-                        coalTotal += (item.Energy * item.Price * _valueFactorMedium);
-                    }
-                }
-
-                return new Generator
-                {
-                    Name = coalGenerator.Name,
-                    Total = coalTotal
-                };
-            }
-            catch (Exception ex)
-            {
-                _iLog.Error($"Error while calculating coal generator total. Error: {ex.Message}");
-            }
-            return null;
         }
 
         /// <summary>
@@ -356,42 +233,134 @@ namespace ReportGeneration.Process
         }
         #endregion Coal
 
-        #region Wind
         /// <summary>
-        /// Calculates the wind generator total.
+        /// Calculates the generation total.
         /// </summary>
-        /// <param name="windGenerator">The wind generator.</param>
+        /// <param name="generation">The generation.</param>
+        /// <param name="name">The name.</param>
+        /// <param name="location">The location.</param>
         /// <returns></returns>
-        private async Task<Generator> CalculateWindGeneratorTotal(Input.WindGenerator windGenerator)
+        private async Task<Generator> CalculateGenerationTotal(Input.Generation generation, string name, string location = null)
         {
-            if (windGenerator == null) return null;
+            if (generation == null || string.IsNullOrWhiteSpace(name)) return null;
             try
             {
                 _iLog.Info("Calculate wind generator total processing started.");
-                double windTotal = 0;
-                if (!(windGenerator.Generations?.Days == null) && windGenerator.Generations?.Days?.Count > 0)
-                {
-                    double valueFactor = string.Equals(windGenerator.Location, "ONSHORE", StringComparison.InvariantCultureIgnoreCase) ? AppConfigHelper.GetSectionsConfig("ValueFactor", "High", 0.0)
-                                                                : AppConfigHelper.GetSectionsConfig("ValueFactor", "Low", 0.0);
 
-                    foreach (var item in windGenerator.Generations.Days)
+                double valueFactor = 0;
+                double total = 0;
+                //Decide the value factor for specific generator
+                if (Extensions.Contains(name, "Wind[Offshore]") || Extensions.Contains(name, "Wind[Onshore]"))
+                {
+                    valueFactor = string.Equals(location, "ONSHORE", StringComparison.InvariantCultureIgnoreCase) ? AppConfigHelper.GetSectionsConfig("ValueFactor", "High", 0.0)
+                                                                   : AppConfigHelper.GetSectionsConfig("ValueFactor", "Low", 0.0);
+                }
+                else if (Extensions.Contains(name, "coal") || Extensions.Contains(name, "gas"))
+                {
+                    valueFactor = AppConfigHelper.GetSectionsConfig("ValueFactor", "Medium", 0.0);
+                }
+
+                //Calculate the generation value for each generator
+                if (!(generation?.Days == null) && generation?.Days?.Count > 0)
+                {
+                    foreach (var item in generation.Days)
                     {
-                        windTotal += (item.Energy * item.Price * valueFactor);
+                        total += (item.Energy * item.Price * valueFactor);
                     }
                 }
+                //return the generation value
                 return new Generator
                 {
-                    Name = windGenerator.Name,
-                    Total = windTotal
+                    Name = name,
+                    Total = total
                 };
             }
             catch (Exception ex)
             {
-                _iLog.Error($"Error while calculating wind generator total. Error: {ex.Message}");
+                _iLog.Error($"Error while calculating generation total. Error: {ex.Message}");
             }
             return null;
         }
-        #endregion Wind
+
+        /// <summary>
+        /// Calculates the daily maximum emission.
+        /// </summary>
+        /// <param name="day">The day.</param>
+        /// <param name="name">The name.</param>
+        /// <param name="emissionsRating">The emissions rating.</param>
+        /// <param name="emissionFactor">The emission factor.</param>
+        /// <returns></returns>
+        private async Task<Day> CalculateDailyMaxEmission(Input.Day day, string name, double emissionsRating, string emissionFactor)
+        {
+            if (day == null) return null;
+            try
+            {
+                _iLog.Info("Calculate daily max emission process started.");
+                return new Day
+                {
+                    Name = name,
+                    Date = day.Date,
+                    Emission = day.Energy * emissionsRating * GetEmissionFactorValue(name, emissionFactor)
+                };
+            }
+            catch (Exception ex)
+            {
+                _iLog.Error($"Error while calculating daily max emission. Error: {ex.Message}");
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the emission factor value.
+        /// </summary>
+        /// <param name="generatorType">Type of the generator.</param>
+        /// <param name="emissionFactor">The emission factor.</param>
+        /// <returns></returns>
+        private double GetEmissionFactorValue(string generatorType, string emissionFactor)
+        {
+            double emissionFactorValue = 0;
+            if (string.IsNullOrWhiteSpace(generatorType) || string.IsNullOrWhiteSpace(emissionFactor)) return emissionFactorValue;
+            char[] delimiterChars = { '[' };
+            string[] splitGeneratorType = generatorType.Split(delimiterChars);
+            switch (splitGeneratorType[0]?.ToUpper())
+            {
+                case "COAL":
+                    switch (emissionFactor.ToUpper())
+                    {
+                        case "HIGH":
+                            emissionFactorValue = AppConfigHelper.GetSectionsConfig("EmissionFactor", emissionFactor.ToUpper(), 0.0);
+                            break;
+                        case "MEDIUM":
+                            emissionFactorValue = AppConfigHelper.GetSectionsConfig("EmissionFactor", emissionFactor.ToUpper(), 0.0);
+                            break;
+                        case "LOW":
+                            emissionFactorValue = AppConfigHelper.GetSectionsConfig("EmissionFactor", emissionFactor.ToUpper(), 0.0);
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                case "GAS":
+                    switch (emissionFactor.ToUpper())
+                    {
+                        case "HIGH":
+                            emissionFactorValue = AppConfigHelper.GetSectionsConfig("EmissionFactor", emissionFactor.ToUpper(), 0.0);
+                            break;
+                        case "MEDIUM":
+                            emissionFactorValue = AppConfigHelper.GetSectionsConfig("EmissionFactor", emissionFactor.ToUpper(), 0.0);
+                            break;
+                        case "LOW":
+                            emissionFactorValue = AppConfigHelper.GetSectionsConfig("EmissionFactor", emissionFactor.ToUpper(), 0.0);
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                default:
+                    break;
+            }
+            return emissionFactorValue;
+        }
 
         #endregion
     }
